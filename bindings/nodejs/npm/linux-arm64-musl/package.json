@@ -1,0 +1,22 @@
+{
+  "name": "@bigbytes-driver/lib-linux-arm64-musl",
+  "repository": "https://github.com/getbigbytes/bigsql.git",
+  "version": "0.25.4",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "main": "bigbytes-driver.linux-arm64-musl.node",
+  "files": [
+    "bigbytes-driver.linux-arm64-musl.node"
+  ],
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">= 10"
+  },
+  "libc": [
+    "musl"
+  ]
+}

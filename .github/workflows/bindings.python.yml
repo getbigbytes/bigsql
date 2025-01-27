@@ -1,0 +1,161 @@
+#name: Bindings Python
+#
+#on:
+#  push:
+#    branches:
+#      - main
+#    tags:
+#      - v*
+#  pull_request:
+#    branches:
+#      - main
+#    paths:
+#      - "core/**"
+#      - "sql/**"
+#      - "driver/**"
+#      - "bindings/python/**"
+#      - ".github/workflows/bindings.python.yml"
+#
+#concurrency:
+#  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+#  cancel-in-progress: true
+#
+#jobs:
+#  check:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Setup Rust toolchain
+#        uses: ./.github/actions/setup
+#        with:
+#          cache-key: bindings-python-check
+#      - name: Setup Python
+#        uses: actions/setup-python@v5
+#        with:
+#          python-version: "3.12"
+#      - name: Install dependencies
+#        working-directory: bindings/python
+#        run: pip install ruff
+#      - name: Check format
+#        working-directory: bindings/python
+#        run: ruff format --check .
+#
+#  build:
+#    name: build-${{ matrix.os }}-${{ matrix.arch }}
+#    needs: check
+#    runs-on: ${{ matrix.runner }}
+#    strategy:
+#      matrix:
+#        include:
+#          - os: linux
+#            arch: x86_64
+#            target: x86_64-unknown-linux-gnu
+#            runner: ubuntu-latest
+#          - os: linux
+#            arch: aarch64
+#            target: aarch64-unknown-linux-gnu
+#            runner: ubuntu-latest
+#          - os: windows
+#            arch: x86_64
+#            target: x86_64-pc-windows-msvc
+#            runner: windows-latest
+#          - os: macos
+#            arch: x86_64
+#            target: x86_64-apple-darwin
+#            runner: macos-latest
+#          - os: macos
+#            arch: aarch64
+#            target: aarch64-apple-darwin
+#            runner: macos-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Get opts
+#        id: opts
+#        shell: bash
+#        run: |
+#          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+#            echo "BUILD_ARGS=--strip --out dist" >> $GITHUB_OUTPUT
+#          else
+#            echo "BUILD_ARGS=--release --strip --out dist" >> $GITHUB_OUTPUT
+#          fi
+#          if [[ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]]; then
+#            echo "MANYLINUX=2_28" >> $GITHUB_OUTPUT
+#          else
+#            echo "MANYLINUX=auto" >> $GITHUB_OUTPUT
+#          fi
+#      - name: Setup Rust toolchain
+#        uses: ./.github/actions/setup
+#        with:
+#          cache-key: bindings-python-${{ matrix.os }}-${{ matrix.arch }}
+#          target: ${{ matrix.target }}
+#      - name: Build wheels
+#        uses: PyO3/maturin-action@v1
+#        with:
+#          working-directory: bindings/python
+#          target: ${{ matrix.target }}
+#          manylinux: ${{ steps.opts.outputs.MANYLINUX }}
+#          sccache: "true"
+#          args: ${{ steps.opts.outputs.BUILD_ARGS }}
+#      - name: Upload artifact
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: bindings-python-${{ matrix.os }}-${{ matrix.arch }}
+#          path: bindings/python/dist/*.whl
+#
+#  integration:
+#    name: integration-${{ matrix.pyver }}
+#    needs: build
+#    runs-on: ubuntu-latest
+#    strategy:
+#      matrix:
+#        pyver: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Setup Python
+#        uses: actions/setup-python@v5
+#        with:
+#          python-version: ${{ matrix.pyver }}
+#      - name: Prepare
+#        working-directory: tests
+#        run: make up
+#      - name: Download artifact
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: bindings-python-linux-x86_64
+#          path: bindings/python/artifacts
+#      - name: Install dependencies
+#        working-directory: bindings/python
+#        run: |
+#          pip install behave
+#          pip install artifacts/*.whl
+#      - name: Test AsyncIO
+#        working-directory: bindings/python
+#        run: behave tests/asyncio
+#      - name: Test Blocking
+#        working-directory: bindings/python
+#        run: behave tests/blocking
+#      - name: Test Cursor
+#        working-directory: bindings/python
+#        run: behave tests/cursor
+#
+#  publish:
+#    if: startsWith(github.ref, 'refs/tags/v')
+#    needs: [check, build, integration]
+#    runs-on: ubuntu-latest
+#    permissions:
+#      id-token: write
+#    environment:
+#      name: pypi.org
+#      url: https://pypi.org/p/bigbytes-driver/
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: actions/download-artifact@v4
+#        with:
+#          path: bindings/python/artifacts
+#          pattern: bindings-python-*
+#          merge-multiple: true
+#      - name: Publish package distributions to PyPI
+#        uses: pypa/gh-action-pypi-publish@unstable/v1
+#        with:
+#          skip-existing: true
+#          packages-dir: bindings/python/artifacts

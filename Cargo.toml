@@ -1,0 +1,42 @@
+[workspace]
+default-members = ["core", "sql", "driver", "macros", "cli"]
+members = [
+    "core",
+    "sql",
+    "driver",
+    "macros",
+    "cli",
+    "bindings/python",
+    "bindings/nodejs",
+    "ttc",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+version = "0.25.4"
+license = "Apache-2.0"
+authors = ["Databend Authors <opensource@getbigbytes.com>"]
+categories = ["database"]
+keywords = ["databend", "database", "rust"]
+repository = "https://github.com/getbigbytes/bigsql"
+
+[workspace.dependencies]
+databend-client = { path = "core", version = "0.25.4" }
+bigbytes-driver = { path = "driver", version = "0.25.4" }
+bigbytes-driver-core = { path = "sql", version = "0.25.4" }
+bigbytes-driver-macros = { path = "macros", version = "0.25.4" }
+
+tokio-stream = "0.1"
+chrono = { version = "0.4.35", default-features = false, features = ["clock"] }
+arrow = { version = "53.0" }
+arrow-array = { version = "53.0" }
+arrow-schema = { version = "53.0" }
+arrow-flight = { version = "53.0", features = ["flight-sql-experimental"] }
+tonic = { version = "0.12", default-features = false, features = [
+    "transport",
+    "codegen",
+    "tls",
+    "tls-webpki-roots",
+    "prost",
+] }

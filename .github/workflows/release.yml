@@ -1,0 +1,166 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build_linux:
+    name: build ${{ matrix.target }}
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - x86_64-unknown-linux-musl
+          - aarch64-unknown-linux-gnu
+          - aarch64-unknown-linux-musl
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+      - name: Setup Cross
+        shell: bash
+        run: |
+          curl -sSfLo /tmp/cross.tar.gz https://github.com/cross-rs/cross/releases/download/v0.2.5/cross-x86_64-unknown-linux-gnu.tar.gz
+          tar -xzf /tmp/cross.tar.gz -C /tmp
+          sudo mv /tmp/cross /usr/local/bin/cross
+      - name: Build
+        shell: bash
+        run: |
+          cross build --release --target=${{ matrix.target }} --bin=bigsql
+      - name: Publish Binary
+        uses: ./.github/actions/publish_binary
+        env:
+          GH_TOKEN: ${{ github.token }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT_URL }}
+        with:
+          os: linux
+          target: ${{ matrix.target }}
+          version: ${{ github.ref_name }}
+
+  build_other:
+    name: build ${{ matrix.target }}
+    strategy:
+      matrix:
+        include:
+          - os: macos
+            target: aarch64-apple-darwin
+          - os: macos
+            target: x86_64-apple-darwin
+          - os: windows
+            target: aarch64-pc-windows-msvc
+          - os: windows
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+      - name: Build
+        shell: bash
+        run: |
+          cargo build --release --target=${{ matrix.target }} --bin=bigsql
+      - name: Publish Binary
+        uses: ./.github/actions/publish_binary
+        env:
+          GH_TOKEN: ${{ github.token }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT_URL }}
+        with:
+          os: ${{ matrix.os }}
+          target: ${{ matrix.target }}
+          version: ${{ github.ref_name }}
+
+  update_repo:
+    needs: [build_linux, build_other]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update Release and Tags
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT_URL }}
+        run: |
+          gh api '/repos/getbigbytes/bigsql/tags' > tags.json
+          aws s3 cp tags.json s3://repo/bigsql/tags.json
+          gh api '/repos/getbigbytes/bigsql/releases' > releases.json
+          aws s3 cp releases.json s3://repo/bigsql/releases.json
+
+  distribution:
+    needs: build_linux
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - packager: apk
+            arch: amd64
+            target: x86_64-unknown-linux-musl
+          - packager: apk
+            arch: arm64
+            target: aarch64-unknown-linux-musl
+          - packager: deb
+            arch: amd64
+            target: x86_64-unknown-linux-musl
+          - packager: deb
+            arch: arm64
+            target: aarch64-unknown-linux-musl
+          - packager: rpm
+            arch: amd64
+            target: x86_64-unknown-linux-musl
+          - packager: rpm
+            arch: arm64
+            target: aarch64-unknown-linux-musl
+          - packager: archlinux
+            arch: amd64
+            target: x86_64-unknown-linux-gnu
+          - packager: archlinux
+            arch: arm64
+            target: aarch64-unknown-linux-gnu
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup nfpm
+        shell: bash
+        run: |
+          curl -sSfLo /tmp/nfpm.tar.gz https://github.com/goreleaser/nfpm/releases/download/v2.28.0/nfpm_2.28.0_Linux_x86_64.tar.gz
+          tar -xzf /tmp/nfpm.tar.gz -C /tmp
+          sudo mv /tmp/nfpm /usr/local/bin/nfpm
+      - name: Setup yq
+        shell: bash
+        run: |
+          curl -sSfLo /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          chmod +x /usr/local/bin/yq
+      - name: Download
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p dist/pkg
+          gh release download ${{ github.ref_name }} --pattern "bigsql-${{ matrix.target }}.tar.gz" --dir dist/
+          tar -xzf dist/bigsql-${{ matrix.target }}.tar.gz -C dist/
+      - name: Package
+        shell: bash
+        run: |
+          yq -i '.arch = "${{ matrix.arch }}"' nfpm.yaml
+          yq -i '.version = "${{ github.ref_name }}"' nfpm.yaml
+          nfpm package --packager ${{ matrix.packager }} --target dist/pkg/
+      - name: Publish
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload ${{ github.ref_name }} dist/pkg/* --clobber

@@ -1,0 +1,19 @@
+{
+  "name": "@bigbytes-driver/lib-win32-x64-msvc",
+  "repository": "https://github.com/getbigbytes/bigsql.git",
+  "version": "0.25.4",
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "bigbytes-driver.win32-x64-msvc.node",
+  "files": [
+    "bigbytes-driver.win32-x64-msvc.node"
+  ],
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">= 10"
+  }
+}

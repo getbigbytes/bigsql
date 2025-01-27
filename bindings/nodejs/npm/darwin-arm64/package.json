@@ -1,0 +1,19 @@
+{
+  "name": "@bigbytes-driver/lib-darwin-arm64",
+  "repository": "https://github.com/getbigbytes/bigsql.git",
+  "version": "0.25.4",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "main": "bigbytes-driver.darwin-arm64.node",
+  "files": [
+    "bigbytes-driver.darwin-arm64.node"
+  ],
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">= 10"
+  }
+}

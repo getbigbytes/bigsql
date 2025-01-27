@@ -1,0 +1,15 @@
+name: "bigsql"
+arch: ""
+platform: "linux"
+version: ""
+section: "database"
+priority: "extra"
+maintainer: "Databend Authors <opensource@getbigbytes.com>"
+description: |
+  BigSQL is a native command line tool for Databend.
+vendor: "Digitrans Inc"
+homepage: "https://github.com/getbigbytes/bigsql"
+license: "Apache-2.0"
+contents:
+- src: dist/bigsql
+  dst: /usr/bin/bigsql
