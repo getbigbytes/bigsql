@@ -28,7 +28,7 @@ pub use bigbytes_driver_core::schema::{DataType, DecimalSize, Field, Schema, Sch
 pub use bigbytes_driver_core::value::Interval;
 pub use bigbytes_driver_core::value::{NumberValue, Value};
 
-pub use databend_driver_macros::TryFromRow;
+pub use bigbytes_driver_macros::TryFromRow;
 
 #[doc(hidden)]
 pub mod _macro_internal {
