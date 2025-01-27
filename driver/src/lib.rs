@@ -20,17 +20,17 @@ pub mod rest_api;
 pub use conn::{Client, Connection, ConnectionInfo};
 
 // pub use for convenience
-pub use databend_driver_core::error::{Error, Result};
-pub use databend_driver_core::rows::{
+pub use bigbytes_driver_core::error::{Error, Result};
+pub use bigbytes_driver_core::rows::{
     Row, RowIterator, RowStatsIterator, RowWithStats, ServerStats,
 };
-pub use databend_driver_core::schema::{DataType, DecimalSize, Field, Schema, SchemaRef};
-pub use databend_driver_core::value::Interval;
-pub use databend_driver_core::value::{NumberValue, Value};
+pub use bigbytes_driver_core::schema::{DataType, DecimalSize, Field, Schema, SchemaRef};
+pub use bigbytes_driver_core::value::Interval;
+pub use bigbytes_driver_core::value::{NumberValue, Value};
 
 pub use databend_driver_macros::TryFromRow;
 
 #[doc(hidden)]
 pub mod _macro_internal {
-    pub use databend_driver_core::_macro_internal::*;
+    pub use bigbytes_driver_core::_macro_internal::*;
 }

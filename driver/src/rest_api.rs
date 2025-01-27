@@ -29,10 +29,10 @@ use tokio_stream::Stream;
 use databend_client::PresignedResponse;
 use databend_client::QueryResponse;
 use databend_client::{APIClient, SchemaField};
-use databend_driver_core::error::{Error, Result};
-use databend_driver_core::raw_rows::{RawRow, RawRowIterator, RawRowWithStats};
-use databend_driver_core::rows::{Row, RowIterator, RowStatsIterator, RowWithStats, ServerStats};
-use databend_driver_core::schema::{Schema, SchemaRef};
+use bigbytes_driver_core::error::{Error, Result};
+use bigbytes_driver_core::raw_rows::{RawRow, RawRowIterator, RawRowWithStats};
+use bigbytes_driver_core::rows::{Row, RowIterator, RowStatsIterator, RowWithStats, ServerStats};
+use bigbytes_driver_core::schema::{Schema, SchemaRef};
 
 use crate::conn::{Connection, ConnectionInfo, Reader};
 
