@@ -19,7 +19,7 @@ use std::{collections::HashSet, env};
 
 use anyhow::{anyhow, Result};
 use comfy_table::{Cell, CellAlignment, Table};
-use databend_driver::{Row, RowStatsIterator, RowWithStats, SchemaRef, ServerStats};
+use bigbytes_driver::{Row, RowStatsIterator, RowWithStats, SchemaRef, ServerStats};
 use indicatif::{HumanBytes, ProgressBar, ProgressState, ProgressStyle};
 use terminal_size::{terminal_size, Width};
 use tokio::time::Instant;

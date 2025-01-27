@@ -379,13 +379,13 @@ pub async fn main() -> Result<()> {
         Ok(session) => session,
         Err(err) => {
             // Exit client if user login failed.
-            if let Some(error) = err.downcast_ref::<databend_driver::Error>() {
+            if let Some(error) = err.downcast_ref::<bigbytes_driver::Error>() {
                 match error {
-                    databend_driver::Error::Api(databend_client::Error::AuthFailure(_)) => {
+                    bigbytes_driver::Error::Api(databend_client::Error::AuthFailure(_)) => {
                         println!("Authenticate failed wrong password user {}", user);
                         return Ok(());
                     }
-                    databend_driver::Error::Arrow(arrow::error::ArrowError::IpcError(ipc_err)) => {
+                    bigbytes_driver::Error::Arrow(arrow::error::ArrowError::IpcError(ipc_err)) => {
                         if ipc_err.contains("Unauthenticated") {
                             println!("Authenticate failed wrong password user {}", user);
                             return Ok(());

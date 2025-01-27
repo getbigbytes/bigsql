@@ -50,7 +50,7 @@ impl FromNapiValue for ValueOptions {
 
 #[napi]
 pub struct Client {
-    inner: databend_driver::Client,
+    inner: bigbytes_driver::Client,
     opts: ValueOptions,
 }
 
@@ -60,7 +60,7 @@ impl Client {
     #[napi(constructor)]
     pub fn new(dsn: String, opts: Option<ValueOptions>) -> Self {
         let name = format!("bigbytes-driver-nodejs/{}", VERSION.as_str());
-        let client = databend_driver::Client::new(dsn).with_name(name);
+        let client = bigbytes_driver::Client::new(dsn).with_name(name);
         Self {
             inner: client,
             opts: opts.unwrap_or_default(),
@@ -77,12 +77,12 @@ impl Client {
 
 #[napi]
 pub struct Connection {
-    inner: Box<dyn databend_driver::Connection>,
+    inner: Box<dyn bigbytes_driver::Connection>,
     opts: ValueOptions,
 }
 
 impl Connection {
-    pub fn new(inner: Box<dyn databend_driver::Connection>, opts: ValueOptions) -> Self {
+    pub fn new(inner: Box<dyn bigbytes_driver::Connection>, opts: ValueOptions) -> Self {
         Self { inner, opts }
     }
 }
@@ -194,7 +194,7 @@ impl Connection {
 }
 
 #[napi]
-pub struct ConnectionInfo(databend_driver::ConnectionInfo);
+pub struct ConnectionInfo(bigbytes_driver::ConnectionInfo);
 
 #[napi]
 impl ConnectionInfo {
@@ -230,12 +230,12 @@ impl ConnectionInfo {
 }
 
 pub struct Value<'v> {
-    inner: &'v databend_driver::Value,
+    inner: &'v bigbytes_driver::Value,
     opts: &'v ValueOptions,
 }
 
 impl<'v> Value<'v> {
-    pub fn new(inner: &'v databend_driver::Value, opts: &'v ValueOptions) -> Self {
+    pub fn new(inner: &'v bigbytes_driver::Value, opts: &'v ValueOptions) -> Self {
         Self { inner, opts }
     }
 }
@@ -244,29 +244,29 @@ impl<'v> ToNapiValue for Value<'v> {
     unsafe fn to_napi_value(env: sys::napi_env, val: Self) -> Result<sys::napi_value> {
         let ctx = Env::from(env);
         match val.inner {
-            databend_driver::Value::Null => Null::to_napi_value(env, Null),
-            databend_driver::Value::EmptyArray => {
+            bigbytes_driver::Value::Null => Null::to_napi_value(env, Null),
+            bigbytes_driver::Value::EmptyArray => {
                 let arr = ctx.create_array(0)?;
                 Array::to_napi_value(env, arr)
             }
-            databend_driver::Value::EmptyMap => {
+            bigbytes_driver::Value::EmptyMap => {
                 let obj = ctx.create_object()?;
                 Object::to_napi_value(env, obj)
             }
-            databend_driver::Value::Boolean(b) => bool::to_napi_value(env, *b),
-            databend_driver::Value::Binary(b) => {
+            bigbytes_driver::Value::Boolean(b) => bool::to_napi_value(env, *b),
+            bigbytes_driver::Value::Binary(b) => {
                 Buffer::to_napi_value(env, Buffer::from(b.as_slice()))
             }
-            databend_driver::Value::String(s) => String::to_napi_value(env, s.to_string()),
-            databend_driver::Value::Number(n) => {
+            bigbytes_driver::Value::String(s) => String::to_napi_value(env, s.to_string()),
+            bigbytes_driver::Value::Number(n) => {
                 NumberValue::to_napi_value(env, NumberValue(n.clone()))
             }
-            databend_driver::Value::Timestamp(_) => {
+            bigbytes_driver::Value::Timestamp(_) => {
                 let inner = val.inner.clone();
                 let v = NaiveDateTime::try_from(inner).map_err(format_napi_error)?;
                 NaiveDateTime::to_napi_value(env, v)
             }
-            databend_driver::Value::Date(_) => {
+            bigbytes_driver::Value::Date(_) => {
                 let inner = val.inner.clone();
                 let v = NaiveDate::try_from(inner).map_err(format_napi_error)?;
                 NaiveDateTime::to_napi_value(
@@ -274,29 +274,29 @@ impl<'v> ToNapiValue for Value<'v> {
                     NaiveDateTime::new(v, NaiveTime::from_hms_opt(0, 0, 0).unwrap()),
                 )
             }
-            databend_driver::Value::Array(inner) => {
+            bigbytes_driver::Value::Array(inner) => {
                 let mut arr = ctx.create_array(inner.len() as u32)?;
                 for (i, v) in inner.into_iter().enumerate() {
                     arr.set(i as u32, Value::new(v, val.opts))?;
                 }
                 Array::to_napi_value(env, arr)
             }
-            databend_driver::Value::Map(inner) => {
+            bigbytes_driver::Value::Map(inner) => {
                 let mut obj = ctx.create_object()?;
                 for (k, v) in inner.into_iter() {
                     obj.set(k.to_string(), Value::new(v, val.opts))?;
                 }
                 Object::to_napi_value(env, obj)
             }
-            databend_driver::Value::Tuple(inner) => {
+            bigbytes_driver::Value::Tuple(inner) => {
                 let mut arr = ctx.create_array(inner.len() as u32)?;
                 for (i, v) in inner.into_iter().enumerate() {
                     arr.set(i as u32, Value::new(v, val.opts))?;
                 }
                 Array::to_napi_value(env, arr)
             }
-            databend_driver::Value::Bitmap(s) => String::to_napi_value(env, s.to_string()),
-            databend_driver::Value::Variant(s) => {
+            bigbytes_driver::Value::Bitmap(s) => String::to_napi_value(env, s.to_string()),
+            bigbytes_driver::Value::Variant(s) => {
                 if val.opts.variant_as_object {
                     let val: serde_json::Value = serde_json::from_str(s)
                         .map_err(|e| Error::from_reason(format!("parse variant error: {}", e)))?;
@@ -305,32 +305,32 @@ impl<'v> ToNapiValue for Value<'v> {
                     String::to_napi_value(env, s.to_string())
                 }
             }
-            databend_driver::Value::Geometry(s) => String::to_napi_value(env, s.to_string()),
-            databend_driver::Value::Interval(s) => String::to_napi_value(env, s.to_string()),
-            databend_driver::Value::Geography(s) => String::to_napi_value(env, s.to_string()),
+            bigbytes_driver::Value::Geometry(s) => String::to_napi_value(env, s.to_string()),
+            bigbytes_driver::Value::Interval(s) => String::to_napi_value(env, s.to_string()),
+            bigbytes_driver::Value::Geography(s) => String::to_napi_value(env, s.to_string()),
         }
     }
 }
 
-pub struct NumberValue(databend_driver::NumberValue);
+pub struct NumberValue(bigbytes_driver::NumberValue);
 
 impl ToNapiValue for NumberValue {
     unsafe fn to_napi_value(env: sys::napi_env, val: Self) -> Result<sys::napi_value> {
         match val.0 {
-            databend_driver::NumberValue::Int8(i) => i8::to_napi_value(env, i),
-            databend_driver::NumberValue::Int16(i) => i16::to_napi_value(env, i),
-            databend_driver::NumberValue::Int32(i) => i32::to_napi_value(env, i),
-            databend_driver::NumberValue::Int64(i) => i64::to_napi_value(env, i),
-            databend_driver::NumberValue::UInt8(i) => u8::to_napi_value(env, i),
-            databend_driver::NumberValue::UInt16(i) => u16::to_napi_value(env, i),
-            databend_driver::NumberValue::UInt32(i) => u32::to_napi_value(env, i),
-            databend_driver::NumberValue::UInt64(i) => u64::to_napi_value(env, i),
-            databend_driver::NumberValue::Float32(i) => f32::to_napi_value(env, i),
-            databend_driver::NumberValue::Float64(i) => f64::to_napi_value(env, i),
-            databend_driver::NumberValue::Decimal128(_, _) => {
+            bigbytes_driver::NumberValue::Int8(i) => i8::to_napi_value(env, i),
+            bigbytes_driver::NumberValue::Int16(i) => i16::to_napi_value(env, i),
+            bigbytes_driver::NumberValue::Int32(i) => i32::to_napi_value(env, i),
+            bigbytes_driver::NumberValue::Int64(i) => i64::to_napi_value(env, i),
+            bigbytes_driver::NumberValue::UInt8(i) => u8::to_napi_value(env, i),
+            bigbytes_driver::NumberValue::UInt16(i) => u16::to_napi_value(env, i),
+            bigbytes_driver::NumberValue::UInt32(i) => u32::to_napi_value(env, i),
+            bigbytes_driver::NumberValue::UInt64(i) => u64::to_napi_value(env, i),
+            bigbytes_driver::NumberValue::Float32(i) => f32::to_napi_value(env, i),
+            bigbytes_driver::NumberValue::Float64(i) => f64::to_napi_value(env, i),
+            bigbytes_driver::NumberValue::Decimal128(_, _) => {
                 String::to_napi_value(env, val.0.to_string())
             }
-            databend_driver::NumberValue::Decimal256(_, _) => {
+            bigbytes_driver::NumberValue::Decimal256(_, _) => {
                 String::to_napi_value(env, val.0.to_string())
             }
         }
@@ -338,7 +338,7 @@ impl ToNapiValue for NumberValue {
 }
 
 #[napi]
-pub struct Schema(databend_driver::SchemaRef);
+pub struct Schema(bigbytes_driver::SchemaRef);
 
 #[napi]
 impl Schema {
@@ -349,7 +349,7 @@ impl Schema {
 }
 
 #[napi]
-pub struct Field(databend_driver::Field);
+pub struct Field(bigbytes_driver::Field);
 
 #[napi]
 impl Field {
@@ -366,12 +366,12 @@ impl Field {
 
 #[napi]
 pub struct RowIterator {
-    inner: databend_driver::RowIterator,
+    inner: bigbytes_driver::RowIterator,
     opts: ValueOptions,
 }
 
 impl RowIterator {
-    pub fn new(inner: databend_driver::RowIterator, opts: ValueOptions) -> Self {
+    pub fn new(inner: bigbytes_driver::RowIterator, opts: ValueOptions) -> Self {
         Self { inner, opts }
     }
 }
@@ -405,12 +405,12 @@ impl RowIterator {
 
 #[napi]
 pub struct RowIteratorExt {
-    inner: databend_driver::RowStatsIterator,
+    inner: bigbytes_driver::RowStatsIterator,
     opts: ValueOptions,
 }
 
 impl RowIteratorExt {
-    pub fn new(inner: databend_driver::RowStatsIterator, opts: ValueOptions) -> Self {
+    pub fn new(inner: bigbytes_driver::RowStatsIterator, opts: ValueOptions) -> Self {
         Self { inner, opts }
     }
 }
@@ -431,11 +431,11 @@ impl RowIteratorExt {
             None => None,
             Some(r0) => match r0 {
                 Ok(r1) => match r1 {
-                    databend_driver::RowWithStats::Row(r) => Some(Ok(RowOrStats {
+                    bigbytes_driver::RowWithStats::Row(r) => Some(Ok(RowOrStats {
                         row: Some(Row::new(r, self.opts.clone())),
                         stats: None,
                     })),
-                    databend_driver::RowWithStats::Stats(ss) => Some(Ok(RowOrStats {
+                    bigbytes_driver::RowWithStats::Stats(ss) => Some(Ok(RowOrStats {
                         row: None,
                         stats: Some(ServerStats(ss)),
                     })),
@@ -469,12 +469,12 @@ impl RowOrStats {
 #[napi]
 #[derive(Clone)]
 pub struct Row {
-    inner: databend_driver::Row,
+    inner: bigbytes_driver::Row,
     opts: ValueOptions,
 }
 
 impl Row {
-    pub fn new(inner: databend_driver::Row, opts: ValueOptions) -> Self {
+    pub fn new(inner: bigbytes_driver::Row, opts: ValueOptions) -> Self {
         Self { inner, opts }
     }
 }
@@ -513,7 +513,7 @@ impl Row {
 
 #[napi]
 #[derive(Clone)]
-pub struct ServerStats(databend_driver::ServerStats);
+pub struct ServerStats(bigbytes_driver::ServerStats);
 
 #[napi]
 impl ServerStats {
@@ -558,6 +558,6 @@ impl ServerStats {
     }
 }
 
-fn format_napi_error(err: databend_driver::Error) -> Error {
+fn format_napi_error(err: bigbytes_driver::Error) -> Error {
     Error::from_reason(format!("{}", err))
 }

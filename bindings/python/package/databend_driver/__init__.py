@@ -14,4 +14,4 @@
 
 # flake8: noqa
 
-from ._databend_driver import *
+from ._bigbytes_driver import *

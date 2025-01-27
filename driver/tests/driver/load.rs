@@ -15,7 +15,7 @@
 use std::{path::Path, vec};
 
 use chrono::{NaiveDateTime, Utc};
-use databend_driver::Client;
+use bigbytes_driver::Client;
 use tokio_stream::StreamExt;
 
 use crate::common::DEFAULT_DSN;

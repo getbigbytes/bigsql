@@ -40,7 +40,7 @@ Repository = "https://github.com/getbigbytes/bigsql"
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
-module-name = "databend_driver._databend_driver"
+module-name = "bigbytes_driver._bigbytes_driver"
 python-source = "package"
 
 [dependency-groups]

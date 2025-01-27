@@ -11,7 +11,7 @@ Databend Python Client
 ### PEP 249 Cursor Object
 
 ```python
-from databend_driver import BlockingDatabendClient
+from bigbytes_driver import BlockingDatabendClient
 
 client = BlockingDatabendClient('databend://root:root@localhost:8000/?sslmode=disable')
 cursor = client.cursor()
@@ -39,7 +39,7 @@ for row in rows:
 ### Blocking Connection Object
 
 ```python
-from databend_driver import BlockingDatabendClient
+from bigbytes_driver import BlockingDatabendClient
 
 client = BlockingDatabendClient('databend://root:root@localhost:8000/?sslmode=disable')
 conn = client.get_conn()
@@ -65,7 +65,7 @@ for row in rows:
 
 ```python
 import asyncio
-from databend_driver import AsyncDatabendClient
+from bigbytes_driver import AsyncDatabendClient
 
 async def main():
     client = AsyncDatabendClient('databend://root:root@localhost:8000/?sslmode=disable')

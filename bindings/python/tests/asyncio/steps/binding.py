@@ -18,7 +18,7 @@ from decimal import Decimal
 
 from behave import given, when, then
 from behave.api.async_step import async_run_until_complete
-import databend_driver
+import bigbytes_driver
 
 
 @given("A new Databend Driver Client")
@@ -28,7 +28,7 @@ async def _(context):
         "TEST_DATABEND_DSN",
         "databend://root:root@localhost:8000/?sslmode=disable",
     )
-    client = databend_driver.AsyncDatabendClient(dsn)
+    client = bigbytes_driver.AsyncDatabendClient(dsn)
     context.conn = await client.get_conn()
 
 

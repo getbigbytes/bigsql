@@ -14,7 +14,7 @@
 
 use std::sync::Arc;
 
-use databend_driver::Client;
+use bigbytes_driver::Client;
 
 use crate::common::DEFAULT_DSN;
 

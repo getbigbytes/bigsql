@@ -44,7 +44,7 @@ fn get_decimal_cls(py: Python<'_>) -> PyResult<&Bound<PyType>> {
         .map(|ty| ty.bind(py))
 }
 
-pub struct Value(databend_driver::Value);
+pub struct Value(bigbytes_driver::Value);
 
 impl<'py> IntoPyObject<'py> for Value {
     type Target = PyAny;
@@ -53,57 +53,57 @@ impl<'py> IntoPyObject<'py> for Value {
 
     fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
         let val: Bound<'_, PyAny> = match self.0 {
-            databend_driver::Value::Null => py.None().into_bound(py),
-            databend_driver::Value::EmptyArray => {
+            bigbytes_driver::Value::Null => py.None().into_bound(py),
+            bigbytes_driver::Value::EmptyArray => {
                 let list = PyList::empty(py);
                 list.into_bound_py_any(py)?
             }
-            databend_driver::Value::EmptyMap => {
+            bigbytes_driver::Value::EmptyMap => {
                 let dict = PyDict::new(py);
                 dict.into_bound_py_any(py)?
             }
-            databend_driver::Value::Boolean(b) => b.into_bound_py_any(py)?,
-            databend_driver::Value::Binary(b) => {
+            bigbytes_driver::Value::Boolean(b) => b.into_bound_py_any(py)?,
+            bigbytes_driver::Value::Binary(b) => {
                 let buf = PyBytes::new(py, &b);
                 buf.into_bound_py_any(py)?
             }
-            databend_driver::Value::String(s) => s.into_bound_py_any(py)?,
-            databend_driver::Value::Number(n) => {
+            bigbytes_driver::Value::String(s) => s.into_bound_py_any(py)?,
+            bigbytes_driver::Value::Number(n) => {
                 let v = NumberValue(n);
                 v.into_bound_py_any(py)?
             }
-            databend_driver::Value::Timestamp(_) => {
+            bigbytes_driver::Value::Timestamp(_) => {
                 let t = NaiveDateTime::try_from(self.0).map_err(|e| {
                     PyException::new_err(format!("failed to convert timestamp: {}", e))
                 })?;
                 t.into_bound_py_any(py)?
             }
-            databend_driver::Value::Date(_) => {
+            bigbytes_driver::Value::Date(_) => {
                 let d = NaiveDate::try_from(self.0)
                     .map_err(|e| PyException::new_err(format!("failed to convert date: {}", e)))?;
                 d.into_bound_py_any(py)?
             }
-            databend_driver::Value::Array(inner) => {
+            bigbytes_driver::Value::Array(inner) => {
                 let list = PyList::new(py, inner.into_iter().map(|v| Value(v)))?;
                 list.into_bound_py_any(py)?
             }
-            databend_driver::Value::Map(inner) => {
+            bigbytes_driver::Value::Map(inner) => {
                 let dict = PyDict::new(py);
                 for (k, v) in inner {
                     dict.set_item(Value(k), Value(v)).unwrap();
                 }
                 dict.into_bound_py_any(py)?
             }
-            databend_driver::Value::Tuple(inner) => {
+            bigbytes_driver::Value::Tuple(inner) => {
                 let tuple = PyTuple::new(py, inner.into_iter().map(|v| Value(v)))?;
                 tuple.into_bound_py_any(py)?
             }
-            databend_driver::Value::Bitmap(s) => s.into_bound_py_any(py)?,
-            databend_driver::Value::Variant(s) => s.into_bound_py_any(py)?,
-            databend_driver::Value::Geometry(s) => s.into_bound_py_any(py)?,
-            databend_driver::Value::Geography(s) => s.into_bound_py_any(py)?,
-            databend_driver::Value::Interval(s) => {
-                let value = databend_driver::Interval::from_string(&s).unwrap();
+            bigbytes_driver::Value::Bitmap(s) => s.into_bound_py_any(py)?,
+            bigbytes_driver::Value::Variant(s) => s.into_bound_py_any(py)?,
+            bigbytes_driver::Value::Geometry(s) => s.into_bound_py_any(py)?,
+            bigbytes_driver::Value::Geography(s) => s.into_bound_py_any(py)?,
+            bigbytes_driver::Value::Interval(s) => {
+                let value = bigbytes_driver::Interval::from_string(&s).unwrap();
                 let total_micros = (value.months as i64) * 30 * 86400000000
                     + (value.days as i64) * 86400000000
                     + value.micros;
@@ -115,7 +115,7 @@ impl<'py> IntoPyObject<'py> for Value {
     }
 }
 
-pub struct NumberValue(databend_driver::NumberValue);
+pub struct NumberValue(bigbytes_driver::NumberValue);
 
 impl<'py> IntoPyObject<'py> for NumberValue {
     type Target = PyAny;
@@ -124,24 +124,24 @@ impl<'py> IntoPyObject<'py> for NumberValue {
 
     fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
         let val: Bound<'_, PyAny> = match self.0 {
-            databend_driver::NumberValue::Int8(i) => i.into_bound_py_any(py)?,
-            databend_driver::NumberValue::Int16(i) => i.into_bound_py_any(py)?,
-            databend_driver::NumberValue::Int32(i) => i.into_bound_py_any(py)?,
-            databend_driver::NumberValue::Int64(i) => i.into_bound_py_any(py)?,
-            databend_driver::NumberValue::UInt8(i) => i.into_bound_py_any(py)?,
-            databend_driver::NumberValue::UInt16(i) => i.into_bound_py_any(py)?,
-            databend_driver::NumberValue::UInt32(i) => i.into_bound_py_any(py)?,
-            databend_driver::NumberValue::UInt64(i) => i.into_bound_py_any(py)?,
-            databend_driver::NumberValue::Float32(i) => i.into_bound_py_any(py)?,
-            databend_driver::NumberValue::Float64(i) => i.into_bound_py_any(py)?,
-            databend_driver::NumberValue::Decimal128(_, _) => {
+            bigbytes_driver::NumberValue::Int8(i) => i.into_bound_py_any(py)?,
+            bigbytes_driver::NumberValue::Int16(i) => i.into_bound_py_any(py)?,
+            bigbytes_driver::NumberValue::Int32(i) => i.into_bound_py_any(py)?,
+            bigbytes_driver::NumberValue::Int64(i) => i.into_bound_py_any(py)?,
+            bigbytes_driver::NumberValue::UInt8(i) => i.into_bound_py_any(py)?,
+            bigbytes_driver::NumberValue::UInt16(i) => i.into_bound_py_any(py)?,
+            bigbytes_driver::NumberValue::UInt32(i) => i.into_bound_py_any(py)?,
+            bigbytes_driver::NumberValue::UInt64(i) => i.into_bound_py_any(py)?,
+            bigbytes_driver::NumberValue::Float32(i) => i.into_bound_py_any(py)?,
+            bigbytes_driver::NumberValue::Float64(i) => i.into_bound_py_any(py)?,
+            bigbytes_driver::NumberValue::Decimal128(_, _) => {
                 let dec_cls = get_decimal_cls(py).expect("failed to load decimal.Decimal");
                 let ret = dec_cls
                     .call1((self.0.to_string(),))
                     .expect("failed to call decimal.Decimal(value)");
                 ret.into_bound()
             }
-            databend_driver::NumberValue::Decimal256(_, _) => {
+            bigbytes_driver::NumberValue::Decimal256(_, _) => {
                 let dec_cls = get_decimal_cls(py).expect("failed to load decimal.Decimal");
                 let ret = dec_cls
                     .call1((self.0.to_string(),))
@@ -153,14 +153,14 @@ impl<'py> IntoPyObject<'py> for NumberValue {
     }
 }
 
-#[pyclass(module = "databend_driver")]
+#[pyclass(module = "bigbytes_driver")]
 pub struct Row {
-    inner: databend_driver::Row,
+    inner: bigbytes_driver::Row,
     idx: usize,
 }
 
 impl Row {
-    pub fn new(row: databend_driver::Row) -> Self {
+    pub fn new(row: bigbytes_driver::Row) -> Self {
         Row { inner: row, idx: 0 }
     }
 }
@@ -227,11 +227,11 @@ impl Row {
     }
 }
 
-#[pyclass(module = "databend_driver")]
-pub struct RowIterator(Arc<Mutex<databend_driver::RowIterator>>);
+#[pyclass(module = "bigbytes_driver")]
+pub struct RowIterator(Arc<Mutex<bigbytes_driver::RowIterator>>);
 
 impl RowIterator {
-    pub fn new(streamer: databend_driver::RowIterator) -> Self {
+    pub fn new(streamer: bigbytes_driver::RowIterator) -> Self {
         RowIterator(Arc::new(Mutex::new(streamer)))
     }
 }
@@ -278,11 +278,11 @@ impl RowIterator {
 }
 
 #[derive(Default)]
-#[pyclass(module = "databend_driver")]
-pub struct Schema(databend_driver::SchemaRef);
+#[pyclass(module = "bigbytes_driver")]
+pub struct Schema(bigbytes_driver::SchemaRef);
 
 impl Schema {
-    pub fn new(schema: databend_driver::SchemaRef) -> Self {
+    pub fn new(schema: bigbytes_driver::SchemaRef) -> Self {
         Schema(schema)
     }
 }
@@ -296,8 +296,8 @@ impl Schema {
     }
 }
 
-#[pyclass(module = "databend_driver")]
-pub struct Field(databend_driver::Field);
+#[pyclass(module = "bigbytes_driver")]
+pub struct Field(bigbytes_driver::Field);
 
 #[pymethods]
 impl Field {
@@ -311,11 +311,11 @@ impl Field {
     }
 }
 
-#[pyclass(module = "databend_driver")]
-pub struct ConnectionInfo(databend_driver::ConnectionInfo);
+#[pyclass(module = "bigbytes_driver")]
+pub struct ConnectionInfo(bigbytes_driver::ConnectionInfo);
 
 impl ConnectionInfo {
-    pub fn new(info: databend_driver::ConnectionInfo) -> Self {
+    pub fn new(info: bigbytes_driver::ConnectionInfo) -> Self {
         ConnectionInfo(info)
     }
 }
@@ -348,11 +348,11 @@ impl ConnectionInfo {
     }
 }
 
-#[pyclass(module = "databend_driver")]
-pub struct ServerStats(databend_driver::ServerStats);
+#[pyclass(module = "bigbytes_driver")]
+pub struct ServerStats(bigbytes_driver::ServerStats);
 
 impl ServerStats {
-    pub fn new(stats: databend_driver::ServerStats) -> Self {
+    pub fn new(stats: bigbytes_driver::ServerStats) -> Self {
         ServerStats(stats)
     }
 }
@@ -393,10 +393,10 @@ impl ServerStats {
     }
 }
 
-pub struct DriverError(databend_driver::Error);
+pub struct DriverError(bigbytes_driver::Error);
 
 impl DriverError {
-    pub fn new(e: databend_driver::Error) -> Self {
+    pub fn new(e: bigbytes_driver::Error) -> Self {
         DriverError(e)
     }
 }

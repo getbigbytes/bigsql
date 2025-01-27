@@ -14,7 +14,7 @@
 
 use tokio_stream::StreamExt;
 
-use databend_driver::{Client, Connection};
+use bigbytes_driver::{Client, Connection};
 
 use crate::common::DEFAULT_DSN;
 
@@ -118,7 +118,7 @@ async fn select_iter_tuple() {
 async fn select_iter_struct() {
     let (conn, table) = prepare_data("select_iter_struct").await;
 
-    use databend_driver::TryFromRow;
+    use bigbytes_driver::TryFromRow;
     #[derive(TryFromRow)]
     struct RowResult {
         i64: i64,

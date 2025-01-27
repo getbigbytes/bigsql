@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use bytes::BytesMut;
-use databend_driver::{Client, Connection};
+use bigbytes_driver::{Client, Connection};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 

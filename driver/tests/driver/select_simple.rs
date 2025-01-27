@@ -16,7 +16,7 @@ use std::assert_eq;
 use std::collections::HashMap;
 
 use chrono::{DateTime, NaiveDate, NaiveDateTime};
-use databend_driver::{Client, Connection, DecimalSize, NumberValue, Value};
+use bigbytes_driver::{Client, Connection, DecimalSize, NumberValue, Value};
 
 use crate::common::DEFAULT_DSN;
 

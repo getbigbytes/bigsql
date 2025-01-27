@@ -17,7 +17,7 @@ from datetime import datetime, date, timedelta
 from decimal import Decimal
 
 from behave import given, when, then
-import databend_driver
+import bigbytes_driver
 
 
 @given("A new Databend Driver Client")
@@ -26,7 +26,7 @@ def _(context):
         "TEST_DATABEND_DSN",
         "databend://root:root@localhost:8000/?sslmode=disable",
     )
-    client = databend_driver.BlockingDatabendClient(dsn)
+    client = bigbytes_driver.BlockingDatabendClient(dsn)
     context.conn = client.get_conn()
 
 

@@ -10,7 +10,7 @@ Databend unified SQL client for RestAPI and FlightSQL
 ### exec
 
 ```rust
-use databend_driver::Client;
+use bigbytes_driver::Client;
 
 let dsn = "databend://root:@localhost:8000/default?sslmode=disable".to_string();
 let client = Client::new(dsn);

@@ -24,7 +24,7 @@ pub fn from_row_derive(tokens_input: TokenStream) -> TokenStream {
     let struct_name = &item.ident;
     let (impl_generics, ty_generics, where_clause) = item.generics.split_for_impl();
 
-    let path = quote!(databend_driver::_macro_internal);
+    let path = quote!(bigbytes_driver::_macro_internal);
 
     let set_fields_code = struct_fields.named.iter().map(|field| {
         let field_name = &field.ident;

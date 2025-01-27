@@ -25,8 +25,8 @@ use tokio_stream::StreamExt;
 use crate::types::{ConnectionInfo, DriverError, Row, RowIterator, ServerStats, VERSION};
 use crate::utils::wait_for_future;
 
-#[pyclass(module = "databend_driver")]
-pub struct BlockingDatabendClient(databend_driver::Client);
+#[pyclass(module = "bigbytes_driver")]
+pub struct BlockingDatabendClient(bigbytes_driver::Client);
 
 #[pymethods]
 impl BlockingDatabendClient {
@@ -34,7 +34,7 @@ impl BlockingDatabendClient {
     #[pyo3(signature = (dsn))]
     pub fn new(dsn: String) -> PyResult<Self> {
         let name = format!("bigbytes-driver-python/{}", VERSION.as_str());
-        let client = databend_driver::Client::new(dsn).with_name(name);
+        let client = bigbytes_driver::Client::new(dsn).with_name(name);
         Ok(Self(client))
     }
 
@@ -55,8 +55,8 @@ impl BlockingDatabendClient {
     }
 }
 
-#[pyclass(module = "databend_driver")]
-pub struct BlockingDatabendConnection(Arc<Box<dyn databend_driver::Connection>>);
+#[pyclass(module = "bigbytes_driver")]
+pub struct BlockingDatabendConnection(Arc<Box<dyn bigbytes_driver::Connection>>);
 
 #[pymethods]
 impl BlockingDatabendConnection {
@@ -157,16 +157,16 @@ impl BlockingDatabendConnection {
 
 /// BlockingDatabendCursor is an object that follows PEP 249
 /// https://peps.python.org/pep-0249/#cursor-objects
-#[pyclass(module = "databend_driver")]
+#[pyclass(module = "bigbytes_driver")]
 pub struct BlockingDatabendCursor {
-    conn: Arc<Box<dyn databend_driver::Connection>>,
-    rows: Option<Arc<Mutex<databend_driver::RowIterator>>>,
+    conn: Arc<Box<dyn bigbytes_driver::Connection>>,
+    rows: Option<Arc<Mutex<bigbytes_driver::RowIterator>>>,
     // buffer is used to store only the first row after execute
     buffer: Vec<Row>,
 }
 
 impl BlockingDatabendCursor {
-    fn new(conn: Box<dyn databend_driver::Connection>) -> Self {
+    fn new(conn: Box<dyn bigbytes_driver::Connection>) -> Self {
         Self {
             conn: Arc::new(conn),
             rows: None,
@@ -245,7 +245,7 @@ impl BlockingDatabendCursor {
         let (first, rows) = wait_for_future(py, async move {
             let mut rows = conn.query_iter(&operation).await?;
             let first = rows.next().await.transpose()?;
-            Ok::<_, databend_driver::Error>((first, rows))
+            Ok::<_, bigbytes_driver::Error>((first, rows))
         })
         .map_err(DriverError::new)?;
         if let Some(first) = first {

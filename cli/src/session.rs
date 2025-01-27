@@ -24,8 +24,8 @@ use chrono::NaiveDateTime;
 use databend_common_ast::parser::all_reserved_keywords;
 use databend_common_ast::parser::token::TokenKind;
 use databend_common_ast::parser::token::Tokenizer;
-use databend_driver::ServerStats;
-use databend_driver::{Client, Connection};
+use bigbytes_driver::ServerStats;
+use bigbytes_driver::{Client, Connection};
 use once_cell::sync::Lazy;
 use rustyline::config::Builder;
 use rustyline::error::ReadlineError;
@@ -109,10 +109,10 @@ impl Session {
                 Ok(version) => version,
                 Err(err) => {
                     match err {
-                        databend_driver::Error::Api(databend_client::Error::AuthFailure(_)) => {
+                        bigbytes_driver::Error::Api(databend_client::Error::AuthFailure(_)) => {
                             return Err(err.into());
                         }
-                        databend_driver::Error::Arrow(arrow::error::ArrowError::IpcError(
+                        bigbytes_driver::Error::Arrow(arrow::error::ArrowError::IpcError(
                             ref ipc_err,
                         )) => {
                             if ipc_err.contains("Unauthenticated")
@@ -121,7 +121,7 @@ impl Session {
                                 return Err(err.into());
                             }
                         }
-                        databend_driver::Error::Api(databend_client::Error::Request(
+                        bigbytes_driver::Error::Api(databend_client::Error::Request(
                             ref resp_err,
                         )) => {
                             if resp_err.contains("error sending request for url") {

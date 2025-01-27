@@ -24,7 +24,7 @@ use crate::blocking::{BlockingDatabendClient, BlockingDatabendConnection, Blocki
 use crate::types::{ConnectionInfo, Field, Row, RowIterator, Schema, ServerStats};
 
 #[pymodule]
-fn _databend_driver(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn _bigbytes_driver(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<AsyncDatabendClient>()?;
     m.add_class::<AsyncDatabendConnection>()?;
     m.add_class::<BlockingDatabendClient>()?;

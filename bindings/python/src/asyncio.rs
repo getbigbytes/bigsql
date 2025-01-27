@@ -21,8 +21,8 @@ use pyo3_async_runtimes::tokio::future_into_py;
 
 use crate::types::{ConnectionInfo, DriverError, Row, RowIterator, ServerStats, VERSION};
 
-#[pyclass(module = "databend_driver")]
-pub struct AsyncDatabendClient(databend_driver::Client);
+#[pyclass(module = "bigbytes_driver")]
+pub struct AsyncDatabendClient(bigbytes_driver::Client);
 
 #[pymethods]
 impl AsyncDatabendClient {
@@ -30,7 +30,7 @@ impl AsyncDatabendClient {
     #[pyo3(signature = (dsn))]
     pub fn new(dsn: String) -> PyResult<Self> {
         let name = format!("bigbytes-driver-python/{}", VERSION.as_str());
-        let client = databend_driver::Client::new(dsn).with_name(name);
+        let client = bigbytes_driver::Client::new(dsn).with_name(name);
         Ok(Self(client))
     }
 
@@ -43,8 +43,8 @@ impl AsyncDatabendClient {
     }
 }
 
-#[pyclass(module = "databend_driver")]
-pub struct AsyncDatabendConnection(Arc<Box<dyn databend_driver::Connection>>);
+#[pyclass(module = "bigbytes_driver")]
+pub struct AsyncDatabendConnection(Arc<Box<dyn bigbytes_driver::Connection>>);
 
 #[pymethods]
 impl AsyncDatabendConnection {
